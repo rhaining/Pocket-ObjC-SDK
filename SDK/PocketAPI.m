@@ -792,3 +792,31 @@ static PocketAPI *sSharedAPI = nil;
 NSString *PocketAPITweetID(unsigned long long tweetID){
 	return [NSString stringWithFormat:@"%llu", tweetID];
 }
+
+@implementation PocketAPI(Migration)
+-(NSString *)oauthToken{
+	return [[self pkt_getToken] copy];
+}
+-(void)migrateIfNeeded:(PocketAPILoginHandler)handler{
+	NSString *username = [self username];
+	NSString *password = (NSString *)[self pkt_getKeychainValueForKey:@"password"];
+	if(username && password){
+		[self pkt_migrateAccountToAccessTokenWithUsername:username password:password handler:^(PocketAPI *api, NSError *error){
+			if(error){
+				NSLog(@"error migrating pocket: %@", error);
+			}else{
+				NSLog(@"successfully migrated pocket to oauth");
+				[self removePasswordFromKeychain];
+				//send oauth token to settings.
+			}
+			handler(api, error);
+		}];
+	}
+}
+-(void)removePasswordFromKeychain{
+	[self pkt_setKeychainValue:nil forKey:@"password"];
+}
+-(void)setAccessToken:(NSString *)token username:(NSString *)username{
+	[self pkt_loggedInWithUsername:username token:token];
+}
+@end

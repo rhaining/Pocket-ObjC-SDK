@@ -116,3 +116,9 @@
 @end
 
 extern NSString *PocketAPITweetID(unsigned long long tweetID);
+
+@interface PocketAPI(Migration)
+@property (nonatomic, copy, readonly) NSString *oauthToken;
+-(void)migrateIfNeeded:(PocketAPILoginHandler)handler;
+-(void)setAccessToken:(NSString *)token username:(NSString *)username;
+@end
